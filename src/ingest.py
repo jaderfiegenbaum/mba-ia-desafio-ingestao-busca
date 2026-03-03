@@ -21,7 +21,7 @@ def veficacao_variaveis():
 # Retorna o modelo de embeddings conforme o provedor definido em LLM_PROVIDER.
 def get_embeddings():
     llm = os.getenv("LLM_PROVIDER", "openai").lower()
-    
+
     if llm == "google":
         from langchain_google_genai import GoogleGenerativeAIEmbeddings
         model = os.getenv("GOOGLE_EMBEDDING_MODEL", "models/gemini-embedding-001")
@@ -59,11 +59,6 @@ def ingest_pdf():
             metadata = meta
         )
         enriquecido.append(novo_documento)
-
-    #for d in enriquecido:
-    #    print(d)
-    #    print("="*80)
-    #    print("\n")
 
     # Obtém o modelo de embeddings conforme o provedor definido em LLM_PROVIDER.
     embeddings = get_embeddings()

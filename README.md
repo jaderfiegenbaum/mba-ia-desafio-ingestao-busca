@@ -17,7 +17,7 @@ source .venv/bin/activate
 Instale as dependências:
 
 ```
-pip install -r requeriments.txt
+pip install -r requirements.txt
 ```
 
 Copie o arquivo de exemplo e preencha com suas credenciais:
@@ -25,6 +25,32 @@ Copie o arquivo de exemplo e preencha com suas credenciais:
 ```
 cp .env.example .env
 ```
+
+## Banco de dados
+
+Suba o PostgreSQL com a extensão PGVector via Docker:
+
+```
+docker compose up -d
+```
+
+## Ingestão
+
+Com o banco rodando e o `.env` configurado, execute:
+
+```
+python src/ingest.py
+```
+
+## Chat
+
+Com a ingestão concluída, inicie o chat interativo:
+
+```
+python src/chat.py
+```
+
+Digite sua pergunta e pressione Enter. Para encerrar, digite `sair`.
 
 ## Provedores de LLM
 
@@ -43,19 +69,3 @@ O projeto suporta dois provedores de LLM, configurados pela variável `LLM_PROVI
 > docker compose up -d
 > python src/ingest.py
 > ```
-
-## Banco de dados
-
-Suba o PostgreSQL com a extensão PGVector via Docker:
-
-```
-docker compose up -d
-```
-
-## Ingestão
-
-Com o banco rodando e o `.env` configurado, execute:
-
-```
-python src/ingest.py
-```
