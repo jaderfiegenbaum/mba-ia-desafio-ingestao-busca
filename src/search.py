@@ -33,56 +33,56 @@ RESPONDA A "PERGUNTA DO USUÁRIO"
 """
 
 def search_prompt(questao = None):
-  # Verifica se as variáveis ambientes necessárias estão definidas.
-  veficacao_variaveis()
+    # Verifica se as variáveis ambientes necessárias estão definidas.
+    veficacao_variaveis()
 
-  embeddings = get_embeddings()
+    embeddings = get_embeddings()
 
-  vetores = PGVector(
-      embeddings=embeddings,
-      collection_name=os.getenv("PGVECTOR_COLLECTION"),
-      connection=os.getenv("PGVECTOR_URL"),
-      use_jsonb=True,
-  )
-
-  # Obtém os chunks mais similares através da busca semântica, são retornados 10 chunks mais relevantes para a questão do usuário.
-  chunks_resultados = vetores.similarity_search_with_score(questao, k=10)
-
-  # Concatena o conteúdo de cada chunk para montar o contexto que será enviado à LLM.
-  contexto = ""
-  for doc, score in chunks_resultados:
-    contexto += doc.page_content.strip()
-    contexto += "\n\n"
- 
-  # Obtém o nome do provedor LLM.
-  llm = os.getenv("LLM_PROVIDER", "openai").lower()
-
-  # Monta o template e a chain conforme o provedor definido em LLM_PROVIDER.
-  template = PromptTemplate(
-    input_variables=["contexto", "pergunta"],
-    template=PROMPT_TEMPLATE,
-  )
-
-  # Obtém o modelo de linguagem conforme o provedor definido em LLM_PROVIDER, utilizando as chaves de API e modelos configurados.
-  if llm == "google":
-    from langchain_google_genai import ChatGoogleGenerativeAI
-
-    modelo = ChatGoogleGenerativeAI(
-      model = os.getenv("GOOGLE_MODEL", "gemini-2.5-flash-lite"),
-      temperature = 0,
-      google_api_key = os.getenv("GOOGLE_API_KEY"),
-    )
-  else:
-    from langchain_openai import ChatOpenAI
-
-    modelo = ChatOpenAI(
-      model = os.getenv("OPENAI_MODEL", "gpt-5-nano"),
-      temperature = 0,
-      api_key = os.getenv("OPENAI_API_KEY"),
+    vetores = PGVector(
+        embeddings=embeddings,
+        collection_name=os.getenv("PGVECTOR_COLLECTION"),
+        connection=os.getenv("PGVECTOR_URL"),
+        use_jsonb=True,
     )
 
-  # Criação da chain combinando o template e o modelo, e execução da chain com o contexto e a pergunta do usuário. 
-  chain = template | modelo
-  resposta = chain.invoke({"contexto": contexto, "pergunta": questao})
+    # Obtém os chunks mais similares através da busca semântica, são retornados 10 chunks mais relevantes para a questão do usuário.
+    chunks_resultados = vetores.similarity_search_with_score(questao, k=10)
 
-  return resposta.content
+    # Concatena o conteúdo de cada chunk para montar o contexto que será enviado à LLM.
+    contexto = ""
+    for doc, score in chunks_resultados:
+        contexto += doc.page_content.strip()
+        contexto += "\n\n"
+
+    # Obtém o nome do provedor LLM.
+    llm = os.getenv("LLM_PROVIDER", "openai").lower()
+
+    # Monta o template e a chain conforme o provedor definido em LLM_PROVIDER.
+    template = PromptTemplate(
+        input_variables=["contexto", "pergunta"],
+        template=PROMPT_TEMPLATE,
+    )
+
+    # Obtém o modelo de linguagem conforme o provedor definido em LLM_PROVIDER, utilizando as chaves de API e modelos configurados.
+    if llm == "google":
+        from langchain_google_genai import ChatGoogleGenerativeAI
+
+        modelo = ChatGoogleGenerativeAI(
+            model = os.getenv("GOOGLE_MODEL", "gemini-2.5-flash-lite"),
+            temperature = 0,
+            google_api_key = os.getenv("GOOGLE_API_KEY"),
+        )
+    else:
+        from langchain_openai import ChatOpenAI
+
+        modelo = ChatOpenAI(
+            model = os.getenv("OPENAI_MODEL", "gpt-5-nano"),
+            temperature = 0,
+            api_key = os.getenv("OPENAI_API_KEY"),
+        )
+
+    # Criação da chain combinando o template e o modelo, e execução da chain com o contexto e a pergunta do usuário.
+    chain = template | modelo
+    resposta = chain.invoke({"contexto": contexto, "pergunta": questao})
+
+    return resposta.content
