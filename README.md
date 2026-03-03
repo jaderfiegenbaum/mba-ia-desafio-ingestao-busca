@@ -26,6 +26,24 @@ Copie o arquivo de exemplo e preencha com suas credenciais:
 cp .env.example .env
 ```
 
+## Provedores de LLM
+
+O projeto suporta dois provedores de LLM, configurados pela variável `LLM_PROVIDER` no `.env`:
+
+| Provedor | Valor em `LLM_PROVIDER` | Variáveis necessárias |
+|----------|-------------------------|-----------------------|
+| OpenAI   | `openai`                | `OPENAI_API_KEY`, `OPENAI_MODEL`, `OPENAI_EMBEDDING_MODEL` |
+| Google   | `google`                | `GOOGLE_API_KEY`, `GOOGLE_MODEL`, `GOOGLE_EMBEDDING_MODEL` |
+
+> **Importante:** `ingest.py` e `search.py` **devem usar o mesmo provedor**. O modelo de embeddings utilizado na ingestão precisa ser o mesmo da busca, pois os vetores armazenados no banco são gerados por ele.
+
+> **Atenção ao trocar de provedor:** Se você alterar o `LLM_PROVIDER`, é necessário **apagar os dados do banco e reingerir o PDF**, pois os embeddings existentes foram gerados com o provedor anterior e são incompatíveis com o novo. Para isso, derrube o container e suba novamente:
+> ```
+> docker compose down -v
+> docker compose up -d
+> python src/ingest.py
+> ```
+
 ## Banco de dados
 
 Suba o PostgreSQL com a extensão PGVector via Docker:

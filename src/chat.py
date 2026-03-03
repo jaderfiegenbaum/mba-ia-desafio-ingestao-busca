@@ -1,4 +1,3 @@
-
 from search import search_prompt
 
 def main():

@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
 from langchain_postgres import PGVector
+from langchain_core.prompts import PromptTemplate
 from ingest import get_embeddings, veficacao_variaveis
 load_dotenv()
 
@@ -49,30 +50,36 @@ def search_prompt(questao = None):
     contexto += doc.page_content.strip()
     contexto += "\n\n"
 
-  # Monta o prompt final com o contexto e a pergunta do usuário.
-  prompt = PROMPT_TEMPLATE.format(contexto=contexto, pergunta=questao)
-
-  # Envia o prompt para a LLM conforme o provedor definido em LLM_PROVIDER.
+  # Monta o template e a chain conforme o provedor definido em LLM_PROVIDER.
   llm = os.getenv("LLM_PROVIDER", "openai").lower()
 
+  template = PromptTemplate(
+    input_variables=["contexto", "pergunta"],
+    template=PROMPT_TEMPLATE,
+  )
+
   if llm == "google":
-    from google import generativeai as genai
+    from langchain_google_genai import ChatGoogleGenerativeAI
 
-    genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
-    modelo = genai.GenerativeModel(os.getenv("GOOGLE_MODEL", "gemini-2.5-flash-lite"))
-    resposta = modelo.generate_content(prompt)
-
-    print(resposta.text)
+    modelo = ChatGoogleGenerativeAI(
+      model = os.getenv("GOOGLE_MODEL", "gemini-2.5-flash-lite"),
+      temperature = 0,
+      google_api_key = os.getenv("GOOGLE_API_KEY"),
+    )
   else:
-    from openai import OpenAI
+    from langchain_openai import ChatOpenAI
 
-    cliente = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-    resposta = cliente.chat.completions.create(
-      model=os.getenv("OPENAI_MODEL", "gpt-5-nano"),
-      messages=[{"role": "user", "content": prompt}]
+    modelo = ChatOpenAI(
+      model = os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
+      temperature = 0,
+      api_key = os.getenv("OPENAI_API_KEY"),
     )
 
-    print(resposta.choices[0].message.content)
+  # Criação da chain combinando o template e o modelo, e execução da chain com o contexto e a pergunta do usuário. 
+  chain = template | modelo
+  resposta = chain.invoke({"contexto": contexto, "pergunta": questao})
+
+  print(resposta.content)
 
 if __name__ == "__main__":
-  search_prompt("Quantos clientes temos em 2024?")
+  search_prompt("Qual o faturamento da Empresa SuperTechIABrazil?")
